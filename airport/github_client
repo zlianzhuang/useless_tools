@@ -1,0 +1,144 @@
+#!/bin/bash
+
+datadir=$HOME/.bin/github/
+repo=git@github.com:zlianzhuang/useless_tools.git
+reponame=$(echo $repo | cut -d '/' -f 2 | cut -d '.' -f 1)
+workdir=${datadir}/${reponame}
+password=runner
+port=7799
+address=
+restart=0
+
+while getopts "d:hr:Rp:P:s:" arg
+do
+    case $arg in
+        d)
+            datadir=$OPTARG
+            ;;
+        r)
+            repo=$OPTARG
+            ;;
+        R)
+            restart=1
+            ;;
+        p)
+            password=$OPTARG
+            ;;
+        P)
+            port=$OPTARG
+            ;;
+        s)
+            address=$OPTARG
+            ;;
+        h)
+            echo "this tool is connect to github"
+            echo " "
+            echo "  -d        the datadir. default: $HOME/.bin/github/"
+            echo "  -r        the repo address(ssh repo address). default: git@github.com:zlianzhuang/useless_tools.git"
+            echo "  -R        restart ssh"
+            echo "  -p        user password. default: runner"
+            echo "  -P        proxy port. default: 7799"
+            echo "  -s        use this address. eg: ssh runner@abc.io -p 18893"
+            echo " "
+            echo "TODO:"
+            echo "  set 'StrictHostKeyChecking no' to /etc/ssh/ssh_config"
+            echo "  apt install sshpass"
+            echo "  set github secret TOKEN and USER_PASS(settings->secret and variables->actions)"
+            echo "  set browser SwitchyOmega on the port"
+            exit 0
+            ;;
+        ?)
+            echo "unknow argument"
+            exit 1
+            ;;
+    esac
+done
+
+function run_command() {
+    for i in `seq 1 5`
+    do
+        $@
+        if [ $? == 0 ]; then
+            return 0
+        fi
+        sleep 5
+    done
+
+    exit 2
+}
+
+function init_env() {
+    mkdir -p $datadir
+    cd $datadir
+}
+
+function init_github() {
+    if [ -d $reponame ]
+    then
+        #echo "$repo exists, skip clone."
+        echo "skip clone."
+    else
+        run_command git clone $repo
+        if [ $? -ne 0 ]
+        then
+            echo "clone $repo failed"
+            exit 1
+        fi
+        echo "clone $repo success"
+    fi
+}
+
+function trigger_airport() {
+    cd $workdir
+    run_command git pull
+    echo " " >> ./airport/address
+    git add ./airport/address
+    git commit -m autocommit
+    run_command git push
+}
+
+function wait_trigger_success() {
+    for i in `seq 1 5`
+    do
+        cd $workdir
+        run_command git pull
+        trigger_log_find=$(git log -n 1 | grep "airport is triggerd" | wc -l)
+        if [ $trigger_log_find = 0 ]; then
+            sleep 10
+            echo "trigger_airport is not finish"
+        else
+            return
+        fi
+    done
+}
+
+function get_real_address() {
+    cd $workdir
+    cat ./airport/address | head -n 2 | tail -n 1 | cut -d ':' -f 2
+}
+
+#run_command wget https://raw.githubusercontent.com/zlianzhuang/useless_tools/main/airport/address
+function get_address() {
+    if [ -z $address ]
+    then
+        if [ $restart = 0 ]
+        then
+            trigger_airport
+            wait_trigger_success
+        fi
+        address=$(get_real_address)
+    fi
+}
+
+function start_proxy() {
+    if [ $restart = 1 ]
+    then
+        ps -ef | grep "D $port" | grep sshpass | awk '{print $2}' | xargs kill
+    fi
+    sshpass  -p $password $address -D $port -N &
+}
+
+init_env
+init_github
+get_address
+start_proxy
