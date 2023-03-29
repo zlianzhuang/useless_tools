@@ -18,7 +18,7 @@ address=./airport/address
 
 rm -f $log
 ./airport/ngrok authtoken "$TOKEN"
-./airport/ngrok tcp 22 --log "$log" &
+./airport/ngrok tcp 22 --region us --log "$log" &
 
 sleep 10
 HAS_ERRORS=$(grep "command failed" < $log)
