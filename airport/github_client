@@ -136,6 +136,7 @@ function start_proxy() {
         ps -ef | grep "D $port" | grep sshpass | awk '{print $2}' | xargs kill
     fi
     sshpass  -p $password $address -D $port -N &
+    echo "sshpass  -p $password $address -D $port -N"
 }
 
 init_env
