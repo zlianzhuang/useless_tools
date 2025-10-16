@@ -115,7 +115,8 @@ function wait_trigger_success() {
 #run_command wget https://raw.githubusercontent.com/zlianzhuang/useless_tools/main/airport/address
 function get_address() {
 	trigger_airport
-	wait_trigger_success
+	#wait_trigger_success
+	sleep 10
 }
 
 function start_proxy() {
