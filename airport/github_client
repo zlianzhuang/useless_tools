@@ -123,7 +123,7 @@ function start_proxy() {
     then
         ps -ef | grep "D $port" | grep sshpass | awk '{print $2}' | xargs kill
     fi
-	address="ssh -J serveo.net runner@:lzzhang-github-action"
+	address="ssh -J serveo.net runner@lzzhang-github-action"
     sshpass  -p $password $address -D $port -N &
     echo "sshpass  -p $password $address -D $port -N"
 }
