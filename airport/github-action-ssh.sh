@@ -12,4 +12,4 @@ echo "### Update user: $USER password ###"
 echo -e "$USER_PASS\n$USER_PASS" | sudo passwd "$USER"
 
 ssh -tt -fN -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null -o ServerAliveInterval=60 -R lzzhang-github-action:22:localhost:22 serveo.net
-sleep 1000000
+sleep 1800
