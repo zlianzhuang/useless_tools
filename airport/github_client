@@ -120,11 +120,13 @@ function get_address() {
 }
 
 function start_proxy() {
+	sleep 15
     if [ $restart = 1 ]
     then
         ps -ef | grep "D $port" | grep sshpass | awk '{print $2}' | xargs kill
     fi
-	address="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -J serveo.net runner@lzzhang-github-action"
+	#address="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -J serveo.net runner@lzzhang-github-action"
+	address="ssh -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -p 1234 runner@206.237.0.43"
     sshpass  -p $password $address -D $port -N &
     echo "sshpass  -p $password $address -D $port -N"
 }
